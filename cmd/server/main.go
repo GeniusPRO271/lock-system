@@ -7,7 +7,10 @@ import (
 	"github.com/GeniusPRO271/lock-system/pkg/device"
 	"github.com/GeniusPRO271/lock-system/pkg/jwt"
 	"github.com/GeniusPRO271/lock-system/pkg/log"
+	"github.com/GeniusPRO271/lock-system/pkg/role"
+	"github.com/GeniusPRO271/lock-system/pkg/space"
 	"github.com/GeniusPRO271/lock-system/pkg/user"
+	"github.com/GeniusPRO271/lock-system/pkg/whitelist"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,9 +18,10 @@ func main() {
 	router := gin.Default()
 	db := database.Start_db()
 
-	privateRouter := router.Group("/private")
-	privateRouter.Use(jwt.AuthMiddleware())
-	privateRouter.Use(log.LoggerMiddleware(db))
+	adminRoutes := router.Group("/admin")
+	verifyRoutes := router.Group("")
+	adminRoutes.Use(jwt.JWTAuth())
+	verifyRoutes.Use(jwt.JWTAuthCustomer())
 
 	// Start User
 	userService := &user.UserServiceImpl{Db: db}
@@ -25,7 +29,7 @@ func main() {
 		UserService: userService,
 	}
 
-	userHandler.RegisterRoutes(router, privateRouter)
+	userHandler.RegisterRoutes(router, adminRoutes)
 
 	// Start Log
 	logService := &log.LogServiceImpl{}
@@ -40,6 +44,27 @@ func main() {
 		DeviceService: deviceService,
 	}
 	deviceHandler.RegisterRoutes(router)
+
+	// Start Whitelist
+	whitelistService := &whitelist.WhitelistServiceImpl{Db: db}
+	whitelistHandler := whitelist.Controller{
+		WhitelistService: whitelistService,
+	}
+	whitelistHandler.RegisterRoutes(router, adminRoutes)
+
+	// Start Space
+	spaceService := &space.SpaceServiceImpl{Db: db}
+	spaceHandler := space.Controller{
+		SpaceService: spaceService,
+	}
+	spaceHandler.RegisterRoutes(router, adminRoutes)
+
+	// Start Space
+	roleService := &role.RoleServiceImpl{Db: db}
+	roleHandler := role.Controller{
+		RoleService: roleService,
+	}
+	roleHandler.RegisterRoutes(router, adminRoutes)
 
 	// Start the server
 	stdlog.Printf("Starting server at port 8080")
