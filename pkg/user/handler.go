@@ -1,41 +1,42 @@
 package user
 
 import (
-	"github.com/GeniusPRO271/lock-system/pkg/database"
+	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	model "github.com/GeniusPRO271/lock-system/pkg/database"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 )
 
 type Controller struct {
 	UserService UserService
 }
 
-func (c *Controller) RegisterRoutes(router *gin.Engine, privateRouter *gin.RouterGroup) {
+func (c *Controller) RegisterRoutes(router *gin.Engine, adminRoute *gin.RouterGroup) {
 	router.POST("/v1/user/register", c.PostRegisterUser)
 	router.POST("/v1/user/login", c.PostLogin)
-	privateRouter.PUT("/v1/user/edit", c.PutEditUser) // not implemented yet
-	privateRouter.GET("/v1/user/:id", c.GetUserId)
-	privateRouter.GET("/v1/users", c.GetUsers)
+	adminRoute.PUT("/v1/user/:id", c.UpdateUser) // not implemented yet
+	adminRoute.GET("/v1/user/:id", c.GetUserbyId)
+	adminRoute.GET("/v1/users", c.GetUsers)
 }
 
 // PostRegisterUser handles the HTTP POST request to register a new user.
 // It takes an HTTP response writer and request as input.
 func (c *Controller) PostRegisterUser(ctx *gin.Context) {
 	// Implement registration logic here.
-	var user database.User
+	var user Register
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(400, gin.H{
-			"message": "Your request contains invalid syntax. Please review and correct it",
-			"error":   err.Error(),
-		})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err := c.UserService.CreateUser(user); err != nil {
-		ctx.JSON(404, gin.H{
-			"message": "Error at creating new user",
-			"error":   err.Error(),
-		})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -48,30 +49,29 @@ func (c *Controller) PostRegisterUser(ctx *gin.Context) {
 // It takes an HTTP response writer and request as input.
 func (c *Controller) PostLogin(ctx *gin.Context) {
 	// Implement login logic here.
-	var user UserLogin
+	var user Login
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(400, gin.H{
-			"message": "Your request contains invalid syntax. Please review and correct it",
-			"error":   err.Error(),
-		})
-
+		var errorMessage string
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			validationError := validationErrors[0]
+			if validationError.Tag() == "required" {
+				errorMessage = fmt.Sprintf("%s not provided", validationError.Field())
+			}
+		}
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 		return
 	}
 
 	token, err := c.UserService.VerifyUser(user)
 
 	if err != nil {
-		ctx.JSON(401, gin.H{
-			"message": "Incorrect username or password. Please try again.",
-			"error":   err.Error(),
-		})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"token": token,
-	})
+	ctx.JSON(http.StatusOK, gin.H{"token": token, "email": user.Email, "message": "Successfully logged in"})
 }
 
 // PutEditUser handles the HTTP PUT request to edit user information.
@@ -105,22 +105,42 @@ func (c *Controller) GetUsers(ctx *gin.Context) {
 
 // GetUserId handles the HTTP GET request to retrieve a user by ID.
 // It takes an HTTP response writer and request as input.
-func (c *Controller) GetUserId(ctx *gin.Context) {
-	// Implement logic to retrieve a user by ID here.
-	userID := ctx.Param("id")
-
-	user, err := c.UserService.GetUserByID(userID)
-
+func (c *Controller) GetUserbyId(ctx *gin.Context) {
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	var user model.User
+	err := c.UserService.GetUser(&user, id)
 	if err != nil {
-		ctx.JSON(404, gin.H{
-			"message": "Could not find a user with that ID",
-			"error":   err.Error(),
-		})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ctx.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
+	ctx.JSON(http.StatusOK, user)
+}
 
-	ctx.JSON(200, gin.H{
-		"data": user,
-	})
+func (c *Controller) UpdateUser(ctx *gin.Context) {
+	//var input model.Update
+	var User model.User
+	id, _ := strconv.Atoi(ctx.Param("id"))
 
+	err := c.UserService.GetUser(&User, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ctx.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	ctx.BindJSON(&User)
+	err = c.UserService.UpdateUser(&User)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	ctx.JSON(http.StatusOK, User)
 }

@@ -71,6 +71,7 @@ func (s *WhitelistServiceImpl) GetUsersFromSpaceWhitelist(spaceId string) ([]use
 			Username: u.Username,
 			Email:    u.Email,
 			Name:     u.Name,
+			Role:     u.RoleID,
 		}
 		users = append(users, user)
 	}

@@ -8,10 +8,10 @@ type Controller struct {
 	WhitelistService WhitelistService
 }
 
-func (c *Controller) RegisterRoutes(router *gin.Engine) {
-	router.POST("/v1/space/:spaceId/whitelist/:userId", c.PostUserToWhitelist)
-	router.GET("/v1/space/:spaceId/whitelist", c.GetWhitelist)
-	router.DELETE("/v1/space/:spaceId/whitelist/:userId", c.DeleteUserFromWhitelist)
+func (c *Controller) RegisterRoutes(router *gin.Engine, adminRote *gin.RouterGroup) {
+	adminRote.POST("/v1/space/:spaceId/whitelist/:userId", c.PostUserToWhitelist)
+	adminRote.GET("/v1/space/:spaceId/whitelist", c.GetWhitelist)
+	adminRote.DELETE("/v1/space/:spaceId/whitelist/:userId", c.DeleteUserFromWhitelist)
 }
 
 func (c *Controller) PostUserToWhitelist(ctx *gin.Context) {
@@ -43,8 +43,14 @@ func (c *Controller) GetWhitelist(ctx *gin.Context) {
 		return
 	}
 
+	if users != nil {
+		ctx.JSON(200, gin.H{
+			"message": users,
+		})
+		return
+	}
 	ctx.JSON(200, gin.H{
-		"message": users,
+		"message": "empty",
 	})
 }
 

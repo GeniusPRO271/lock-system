@@ -9,10 +9,10 @@ type Controller struct {
 	SpaceService SpaceService
 }
 
-func (c *Controller) RegisterRoutes(router *gin.Engine) {
-	router.POST("/v1/space", c.PostSpace)
-	router.GET("/v1/spaces", c.GetAllSpaces)
-	router.GET("/v1/space/:spaceId", c.GetSpaceByID)
+func (c *Controller) RegisterRoutes(router *gin.Engine, adminRoute *gin.RouterGroup) {
+	adminRoute.POST("/v1/space", c.PostSpace)
+	adminRoute.GET("/v1/spaces", c.GetAllSpaces)
+	adminRoute.GET("/v1/space/:spaceId", c.GetSpaceByID)
 }
 
 func (c *Controller) PostSpace(ctx *gin.Context) {

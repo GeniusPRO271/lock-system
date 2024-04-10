@@ -1,52 +1,93 @@
 package jwt
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	model "github.com/GeniusPRO271/lock-system/pkg/database"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
-var jwtKey = []byte("your_secret_key") // Change this to your own secret key
+// retrieve JWT key from .env file
+var privateKey = []byte(os.Getenv("JWT_PRIVATE_KEY"))
 
-type Claims struct {
-	UserID string `json:"userID"`
-	jwt.StandardClaims
-}
-
-func GenerateToken(userID uint) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
-	userIDString := strconv.FormatUint(uint64(userID), 10)
-
-	claims := &Claims{
-		UserID: userIDString,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString(jwtKey)
-	if err != nil {
-		return "", err
-	}
-
-	return signedToken, nil
-}
-
-func ParseToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
-
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+// generate JWT token
+func GenerateJWT(user model.User) (string, error) {
+	tokenTTL, _ := strconv.Atoi(os.Getenv("TOKEN_TTL"))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":   user.ID,
+		"role": user.RoleID,
+		"iat":  time.Now().Unix(),
+		"eat":  time.Now().Add(time.Second * time.Duration(tokenTTL)).Unix(),
 	})
+	return token.SignedString(privateKey)
+}
+
+// validate JWT token
+func ValidateJWT(context *gin.Context) error {
+	token, err := getToken(context)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	if !token.Valid {
-		return nil, jwt.ErrSignatureInvalid
+	_, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		return nil
 	}
+	return errors.New("invalid token provided")
+}
 
-	return claims, nil
+// validate Admin role
+func ValidateAdminRoleJWT(context *gin.Context) error {
+	token, err := getToken(context)
+	if err != nil {
+		return err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	userRole := uint(claims["role"].(float64))
+	if ok && token.Valid && userRole == 1 {
+		return nil
+	}
+	return errors.New("invalid admin token provided")
+}
+
+// validate Customer role
+func ValidateCustomerRoleJWT(context *gin.Context) error {
+	token, err := getToken(context)
+	if err != nil {
+		return err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	userRole := uint(claims["role"].(float64))
+	if ok && token.Valid && userRole == 2 || userRole == 1 {
+		return nil
+	}
+	return errors.New("invalid author token provided")
+}
+
+// check token validity
+func getToken(context *gin.Context) (*jwt.Token, error) {
+	tokenString := getTokenFromRequest(context)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return privateKey, nil
+	})
+	return token, err
+}
+
+// extract token from request Authorization header
+func getTokenFromRequest(context *gin.Context) string {
+	bearerToken := context.Request.Header.Get("Authorization")
+	splitToken := strings.Split(bearerToken, " ")
+	if len(splitToken) == 2 {
+		return splitToken[1]
+	}
+	return ""
 }

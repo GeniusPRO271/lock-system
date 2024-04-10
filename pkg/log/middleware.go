@@ -26,7 +26,6 @@ func LoggerMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 		logToSave := database.Log{
 			UserID: uint(userId),
-			// Device
 			// Instruction
 		}
 

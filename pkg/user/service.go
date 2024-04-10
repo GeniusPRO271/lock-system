@@ -1,6 +1,8 @@
 package user
 
 import (
+	"log"
+
 	model "github.com/GeniusPRO271/lock-system/pkg/database"
 	"github.com/GeniusPRO271/lock-system/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -8,10 +10,11 @@ import (
 )
 
 type UserService interface {
-	CreateUser(user model.User) error
-	GetUserByID(id string) (*UserGetResponse, error)
+	CreateUser(user Register) error
+	GetUser(User *model.User, id int) (err error)
 	GetUsers() (*UsersGetResponse, error)
-	VerifyUser(userCredentials UserLogin) (*string, error)
+	VerifyUser(userCredentials Login) (*string, error)
+	UpdateUser(User *model.User) (err error)
 }
 
 type UserServiceImpl struct {
@@ -20,7 +23,7 @@ type UserServiceImpl struct {
 	Db *gorm.DB
 }
 
-func (s *UserServiceImpl) CreateUser(user model.User) error {
+func (s *UserServiceImpl) CreateUser(user Register) error {
 	// Implement registration logic here.
 
 	hashPass, err := hashPassword(user.Password)
@@ -29,26 +32,35 @@ func (s *UserServiceImpl) CreateUser(user model.User) error {
 		return err
 	}
 
-	user.Password = hashPass
-	if result := s.Db.Create(&user); result.Error != nil {
+	userDB := model.User{
+		Name:     user.Name,
+		Email:    user.Email,
+		Password: hashPass,
+		Username: user.Username,
+	}
+
+	if result := s.Db.Create(&userDB); result.Error != nil {
 		return result.Error
 	}
 
 	return nil
 }
 
-func (s *UserServiceImpl) VerifyUser(userCredentials UserLogin) (*string, error) {
+func (s *UserServiceImpl) VerifyUser(userCredentials Login) (*string, error) {
 	var user model.User
 
 	if err := s.Db.First(&user, "email = ?", userCredentials.Email).Error; err != nil {
 		return nil, err
 	}
+	log.Printf("Passed Email", userCredentials.Password)
 
-	if err := verifyPassword(user.Password, userCredentials.Password); err != nil {
+	if err := ValidateUserPassword(&user, userCredentials.Password); err != nil {
 		return nil, err
 	}
+	log.Printf("Passed Password")
 
-	token, err := jwt.GenerateToken(user.ID)
+	log.Printf("Passed DB")
+	token, err := jwt.GenerateJWT(user)
 
 	if err != nil {
 		return nil, err
@@ -57,19 +69,12 @@ func (s *UserServiceImpl) VerifyUser(userCredentials UserLogin) (*string, error)
 	return &token, nil
 }
 
-func (s *UserServiceImpl) GetUserByID(id string) (*UserGetResponse, error) {
-	var user model.User
-
-	if err := s.Db.First(&user, "id = ?", id).Error; err != nil {
-		return nil, err
+func (s *UserServiceImpl) GetUser(User *model.User, id int) (err error) {
+	err = s.Db.Where("id = ?", id).First(User).Error
+	if err != nil {
+		return err
 	}
-
-	return &UserGetResponse{
-		Id:       user.ID,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
-	}, nil
+	return nil
 }
 
 func (s *UserServiceImpl) GetUsers() (*UsersGetResponse, error) {
@@ -90,10 +95,20 @@ func (s *UserServiceImpl) GetUsers() (*UsersGetResponse, error) {
 			Username: user.Username,
 			Email:    user.Email,
 			Name:     user.Name,
+			Role:     user.RoleID,
 		})
 	}
 
 	return response, nil
+}
+
+func (s *UserServiceImpl) UpdateUser(user *model.User) error {
+	// Add a WHERE condition to specify which user to update
+	err := s.Db.Omit("password").Updates(user).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func hashPassword(password string) (string, error) {
@@ -105,8 +120,6 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func verifyPassword(hashedPassword, password string) error {
-	// Compare the hashed password with the password provided by the user.
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err
+func ValidateUserPassword(user *model.User, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 }

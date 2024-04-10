@@ -12,7 +12,7 @@ type Controller struct {
 func (c *Controller) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1/device", c.PostDevice)
 	router.GET("/v1/devices", c.GetDevices)
-	router.GET("/v1/device/:id", c.GetDeviceById)
+	router.GET("/v1/device/:deviceId", c.GetDeviceById)
 }
 
 func (c *Controller) PostDevice(ctx *gin.Context) {
@@ -57,7 +57,7 @@ func (c *Controller) GetDevices(ctx *gin.Context) {
 }
 
 func (c *Controller) GetDeviceById(ctx *gin.Context) {
-	deviceID := ctx.Param("id")
+	deviceID := ctx.Param("deviceId")
 
 	user, err := c.DeviceService.GetDeviceById(deviceID)
 

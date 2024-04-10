@@ -32,6 +32,9 @@ func (s *DeviceServiceImpl) CreateDevice(device model.Device) error {
 	//Add intructions
 
 	//Add device Info
+
+	//Add whitelist
+
 	if err := s.Db.Create(&device).Error; err != nil {
 		return err
 	}
