@@ -1558,3 +1558,4 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 2024-04-21 13:02:51 [runtime/proc.go:267] [INFO] -> ### iot core init success ###
 2024-04-21 13:06:03 [runtime/proc.go:267] [INFO] -> ### iot core init success ###
 2024-04-23 10:29:12 [runtime/proc.go:267] [INFO] -> ### iot core init success ###
+2024-04-23 21:56:07 [runtime/proc.go:267] [INFO] -> ### iot core init success ###

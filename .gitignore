@@ -1,0 +1,13 @@
+# Ignore compiled binaries
+*.exe
+*.o
+*.so
+*.dll
+*.log
+
+# Ignore temporary files
+*~
+.DS_Store
+
+# Ignore environment files
+.env
