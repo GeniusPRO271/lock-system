@@ -21,11 +21,11 @@ type Update struct {
 }
 
 type UserGetResponse struct {
-	Id       uint
-	Username string // Username of the user
-	Email    string // Password of the user (should be hashed)
-	Name     string
-	Role     uint
+	Id       uint   `json:"id"`
+	Username string `json:"username"` // Username of the user
+	Email    string `json:"email"`    // Password of the user (should be hashed)
+	Name     string `json:"name"`
+	Role     string `json:"role"`
 }
 
 type UsersGetResponse struct {

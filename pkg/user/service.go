@@ -5,6 +5,7 @@ import (
 
 	model "github.com/GeniusPRO271/lock-system/pkg/database"
 	"github.com/GeniusPRO271/lock-system/pkg/jwt"
+	"github.com/GeniusPRO271/lock-system/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -52,7 +53,6 @@ func (s *UserServiceImpl) VerifyUser(userCredentials Login) (*string, error) {
 	if err := s.Db.First(&user, "email = ?", userCredentials.Email).Error; err != nil {
 		return nil, err
 	}
-	log.Printf("Passed Email", userCredentials.Password)
 
 	if err := ValidateUserPassword(&user, userCredentials.Password); err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (s *UserServiceImpl) GetUsers() (*UsersGetResponse, error) {
 			Username: user.Username,
 			Email:    user.Email,
 			Name:     user.Name,
-			Role:     user.RoleID,
+			Role:     utils.GetRoleNameByID(user.RoleID),
 		})
 	}
 

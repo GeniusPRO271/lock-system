@@ -12,6 +12,8 @@ type SpaceService interface {
 	CreateSpace(space model.Space) error
 	GetSpaceByID(spaceID string) (*SpaceDTO, error)
 	GetAllSpaces() ([]SpaceDTO, error)
+	LoadSubSpaces(space *model.Space) error
+	SpaceToDTO(spaceData model.Space) SpaceDTO
 }
 
 type SpaceServiceImpl struct {
@@ -21,8 +23,24 @@ type SpaceServiceImpl struct {
 }
 
 func (s *SpaceServiceImpl) CreateSpace(space model.Space) error {
+	// Check if the space has a parentID
+	if space.ParentSpaceID != nil {
+		// Retrieve the parent space
+		var parentSpace model.Space
+		if err := s.Db.First(&parentSpace, *space.ParentSpaceID).Error; err != nil {
+			return err
+		}
+		// Set the level of the new space to the level of the parent space plus 1
+		space.Level = parentSpace.Level + 1
+		log.Println("Adding lvl +1 ")
+	} else {
+		// If parentID is null, set the level to 1
+		log.Println("Adding lvl +1 ")
+		space.Level = 1
+	}
 
 	// Create the space with the associated whitelist
+	log.Println("The new space lvl = %d", space.Level)
 	if err := s.Db.Create(&space).Error; err != nil {
 		return err
 	}
@@ -38,11 +56,16 @@ func (s *SpaceServiceImpl) GetSpaceByID(spaceID string) (*SpaceDTO, error) {
 	}
 
 	var space model.Space
-	if err := s.Db.Preload("SubSpaces").First(&space, uint(id)).Error; err != nil {
+	if err := s.Db.First(&space, uint(id)).Error; err != nil {
 		return nil, err
 	}
 
-	spaceDTO := spaceToDTO(space)
+	// Load subspaces recursively
+	if err := s.LoadSubSpaces(&space); err != nil {
+		return nil, err
+	}
+
+	spaceDTO := s.SpaceToDTO(space)
 
 	return &spaceDTO, nil
 }
@@ -55,28 +78,28 @@ func (s *SpaceServiceImpl) GetAllSpaces() ([]SpaceDTO, error) {
 
 	var spaceDTOs []SpaceDTO
 	for _, space := range spaces {
-		if err := s.loadSubSpaces(space); err != nil {
+		if err := s.LoadSubSpaces(space); err != nil {
 			return nil, err
 		}
-		spaceDTO := spaceToDTO(*space)
+		spaceDTO := s.SpaceToDTO(*space)
 		spaceDTOs = append(spaceDTOs, spaceDTO)
 	}
 
 	return spaceDTOs, nil
 }
 
-func (s *SpaceServiceImpl) loadSubSpaces(space *model.Space) error {
+func (s *SpaceServiceImpl) LoadSubSpaces(space *model.Space) error {
 	if space == nil {
 		return nil
 	}
 
 	var subSpaces []*model.Space
-	if err := s.Db.Where("parent_space_id = ?", space.ID).Find(&subSpaces).Error; err != nil {
+	if err := s.Db.Preload("Whitelist.Users").Preload("Devices").Where("parent_space_id = ?", space.ID).Find(&subSpaces).Error; err != nil {
 		return err
 	}
 
 	for _, subSpace := range subSpaces {
-		if err := s.loadSubSpaces(subSpace); err != nil {
+		if err := s.LoadSubSpaces(subSpace); err != nil {
 			return err
 		}
 	}
@@ -85,10 +108,10 @@ func (s *SpaceServiceImpl) loadSubSpaces(space *model.Space) error {
 	return nil
 }
 
-func spaceToDTO(spaceData model.Space) SpaceDTO {
+func (s *SpaceServiceImpl) SpaceToDTO(spaceData model.Space) SpaceDTO {
 	var subSpacesDTO []SpaceDTO
 	for _, subSpace := range spaceData.SubSpaces {
-		subSpaceDTO := spaceToDTO(*subSpace)
+		subSpaceDTO := s.SpaceToDTO(*subSpace)
 		subSpacesDTO = append(subSpacesDTO, subSpaceDTO)
 	}
 

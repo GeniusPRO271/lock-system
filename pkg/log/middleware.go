@@ -24,8 +24,13 @@ func LoggerMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Process request
+		c.Next()
+
 		logToSave := database.Log{
-			UserID: uint(userId),
+			StatusCode: c.Writer.Status(),
+			UserID:     uint(userId),
+			SpaceID:    3,
 			// Instruction
 		}
 
@@ -34,9 +39,6 @@ func LoggerMiddleware(db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		// Process request
-		c.Next()
 
 		// Stop timer
 		end := time.Now()

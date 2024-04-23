@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	model "github.com/GeniusPRO271/lock-system/pkg/database"
+	"github.com/GeniusPRO271/lock-system/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -118,7 +119,14 @@ func (c *Controller) GetUserbyId(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+
+	ctx.JSON(http.StatusOK, UserGetResponse{
+		Id:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		Name:     user.Name,
+		Role:     utils.GetRoleNameByID(user.RoleID),
+	})
 }
 
 func (c *Controller) UpdateUser(ctx *gin.Context) {

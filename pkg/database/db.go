@@ -19,12 +19,21 @@ func Start_db() *gorm.DB {
 
 	// Drop all tables before migration
 
-	if err := db.AutoMigrate(&User{}, &Device{}, &Whitelist{}, &Space{}, &Log{}, &Role{}); err != nil {
+	if err := db.AutoMigrate(&User{}, &Device{}, &Space{}, &Whitelist{}, &Log{}, &Role{}); err != nil {
 		log.Fatal("Failed migration:", err)
 	}
 
 	// Create roles
+	// roles := []Role{
+	// 	{ID: 1, Name: "admin", Description: "Administrator"},
+	// 	{ID: 2, Name: "verified", Description: "Verified User"},
+	// 	{ID: 3, Name: "unverified", Description: "Unverified User"},
+	// }
+
+	// // Create roles
+	// db.Create(&roles)
 	// Add table suffix when creating tables
+
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
 
 	return db

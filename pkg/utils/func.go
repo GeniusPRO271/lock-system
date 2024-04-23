@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strconv"
+
 	"github.com/GeniusPRO271/lock-system/pkg/database"
 	"gorm.io/gorm"
 )
@@ -50,4 +52,34 @@ func RemoveUserFromWhitelist(db *gorm.DB, node *database.Space, userId uint) err
 	}
 
 	return nil
+}
+
+func StringToUint(str string) (uint, error) {
+	// Convert the string to uint64
+	num, err := strconv.ParseUint(str, 10, 64)
+	if err != nil {
+		return 0, err // Return 0 and the error if conversion fails
+	}
+
+	// Convert uint64 to uint
+	uintNum := uint(num)
+
+	return uintNum, nil // Return the converted uint value and nil error
+}
+
+func GetRoleNameByID(roleID uint) string {
+	// Map role IDs to role names
+	roles := map[uint]string{
+		1: "Admin",
+		2: "Verified",
+		3: "Unverified",
+	}
+
+	// Retrieve role name from the map
+	roleName, exists := roles[roleID]
+	if !exists {
+		return "unknown" // Return "unknown" if role ID doesn't exist
+	}
+
+	return roleName
 }
