@@ -16,6 +16,8 @@ type DeviceService interface {
 	GetDevices() ([]*DevicesGetResponse, error)
 	GetDeviceById(id string) (*DevicesGetResponse, error)
 	UpdateDevicesSpace(data *UpdateDeviceSpaceDto) error
+	GetDeviceByProductId(provider_device_id string) (*DevicesGetResponse, error)
+	UpdateDevicesSpacebyProductID(data *UpdateDeviceSpaceByProductIdDto) error
 }
 
 type DeviceServiceImpl struct {
@@ -28,7 +30,7 @@ func (s *DeviceServiceImpl) SyncDeviceList() ([]model.Device, error) {
 	resp := &GetDevicesResponse{}
 	err := connector.MakeGetRequest(
 		context.Background(),
-		connector.WithAPIUri("/v1.0/users/eu1710916580378iZqjE/devices?page_no=1&page_size=20"),
+		connector.WithAPIUri("/v1.0/devices?page_no=1&page_size=10&schema=torohitssmartlocksystem"),
 		connector.WithResp(resp))
 
 	if err != nil {
@@ -38,7 +40,7 @@ func (s *DeviceServiceImpl) SyncDeviceList() ([]model.Device, error) {
 	var devicesToAdd []model.Device
 
 	// Check if devices are registered in the database and add new ones to devicesToAdd
-	for _, item := range resp.Result {
+	for _, item := range resp.Result.Devices {
 		// Check if the device exists in the database
 		var existingDevice model.Device
 		if err := s.Db.Where("provider_device_id = ?", item.ID).First(&existingDevice).Error; err == gorm.ErrRecordNotFound {
@@ -108,10 +110,43 @@ func (s *DeviceServiceImpl) GetDeviceById(id string) (*DevicesGetResponse, error
 	}, nil
 }
 
+func (s *DeviceServiceImpl) GetDeviceByProductId(provider_device_id string) (*DevicesGetResponse, error) {
+	var device model.Device
+
+	if err := s.Db.First(&device, "provider_device_id = ?", provider_device_id).Error; err != nil {
+		return nil, err
+	}
+
+	return &DevicesGetResponse{
+		Id:               device.ID,
+		ProviderDeviceID: device.ProviderDeviceID,
+		Name:             device.Name,
+		Online:           device.Online,
+		ProductName:      device.ProductName,
+		SpaceID:          device.SpaceID,
+	}, nil
+}
+
 func (s *DeviceServiceImpl) UpdateDevicesSpace(data *UpdateDeviceSpaceDto) error {
 	var device model.Device
 
 	if err := s.Db.First(&device, "id = ?", data.DeviceId).Error; err != nil {
+		return err
+	}
+
+	device.SpaceID = &data.SpaceId
+
+	if err := s.Db.Save(&device).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *DeviceServiceImpl) UpdateDevicesSpacebyProductID(data *UpdateDeviceSpaceByProductIdDto) error {
+	var device model.Device
+
+	if err := s.Db.First(&device, "provider_device_id = ?", data.DeviceId).Error; err != nil {
 		return err
 	}
 

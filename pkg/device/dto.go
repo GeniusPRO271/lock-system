@@ -36,10 +36,16 @@ type StatusObject struct {
 	Value interface{} `json:"value"`
 }
 
+type DevicesResponse struct {
+	Devices []ResultItem `json:"devices"`
+	LastId  string       `json:"last_id"`
+	Total   int          `json:"total"`
+}
+
 type GetDevicesResponse struct {
-	Code    int          `json:"code"`
-	Msg     string       `json:"msg"`
-	Success bool         `json:"success"`
-	Result  []ResultItem `json:"result"`
-	T       int64        `json:"t"`
+	Code    int             `json:"code"`
+	Msg     string          `json:"msg"`
+	Success bool            `json:"success"`
+	Result  DevicesResponse `json:"result"`
+	T       int64           `json:"t"`
 }
