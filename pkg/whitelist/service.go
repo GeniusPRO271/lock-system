@@ -187,6 +187,8 @@ func (s *WhitelistServiceImpl) SpaceToWhitelistDTORecursive(spaceData database.S
 			Name:             device.Name,
 			ProductName:      device.ProductName,
 			ProviderDeviceID: device.ProviderDeviceID,
+			ProductKey:       device.ProductKey,
+			ProviderUUID:     device.ProviderUUID,
 			SpaceID:          device.SpaceID,
 		})
 	}

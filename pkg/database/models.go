@@ -9,6 +9,8 @@ type Device struct {
 	ProductName      string `gorm:"unique;not null;type:varchar(100);default:null" binding:"required"`
 	ProviderDeviceID string `gorm:"unique;not null;type:varchar(100);default:null" binding:"required"`
 	Online           bool   `gorm:"not null;default:false" binding:"required"`
+	ProductKey       string `gorm:"unique;not null;type:varchar(100);default:null" binding:"required"`
+	ProviderUUID     string `gorm:"unique;not null;type:varchar(100);default:null" binding:"required"`
 	Instruction      *string
 	QrCode           *string
 	SpaceID          *uint

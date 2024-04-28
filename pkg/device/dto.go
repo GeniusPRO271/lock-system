@@ -6,6 +6,8 @@ type DevicesGetResponse struct {
 	Name             string `binding:"required"`
 	ProductName      string `binding:"required"`
 	ProviderDeviceID string `binding:"required"`
+	ProductKey       string `binding:"required"`
+	ProviderUUID     string `binding:"required"`
 	SpaceID          *uint
 }
 

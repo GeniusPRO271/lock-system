@@ -48,6 +48,8 @@ func (s *DeviceServiceImpl) SyncDeviceList() ([]model.Device, error) {
 				Name:             item.Name,
 				ProductName:      item.ProductName,
 				ProviderDeviceID: item.ID,
+				ProductKey:       item.ProductID,
+				ProviderUUID:     item.UUID,
 				Online:           item.Online,
 			}
 			devicesToAdd = append(devicesToAdd, device)
@@ -86,6 +88,8 @@ func (s *DeviceServiceImpl) GetDevices() ([]*DevicesGetResponse, error) {
 			Name:             device.Name,
 			Online:           device.Online,
 			ProductName:      device.ProductName,
+			ProductKey:       device.ProductKey,
+			ProviderUUID:     device.ProviderUUID,
 			SpaceID:          device.SpaceID,
 		})
 	}
@@ -106,6 +110,8 @@ func (s *DeviceServiceImpl) GetDeviceById(id string) (*DevicesGetResponse, error
 		Name:             device.Name,
 		Online:           device.Online,
 		ProductName:      device.ProductName,
+		ProductKey:       device.ProductKey,
+		ProviderUUID:     device.ProviderUUID,
 		SpaceID:          device.SpaceID,
 	}, nil
 }
@@ -122,6 +128,8 @@ func (s *DeviceServiceImpl) GetDeviceByProductId(provider_device_id string) (*De
 		ProviderDeviceID: device.ProviderDeviceID,
 		Name:             device.Name,
 		Online:           device.Online,
+		ProductKey:       device.ProductKey,
+		ProviderUUID:     device.ProviderUUID,
 		ProductName:      device.ProductName,
 		SpaceID:          device.SpaceID,
 	}, nil
