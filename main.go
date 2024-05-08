@@ -11,6 +11,7 @@ import (
 	"github.com/GeniusPRO271/lock-system/pkg/role"
 	"github.com/GeniusPRO271/lock-system/pkg/space"
 	"github.com/GeniusPRO271/lock-system/pkg/user"
+	"github.com/GeniusPRO271/lock-system/pkg/utils"
 	"github.com/GeniusPRO271/lock-system/pkg/whitelist"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -33,6 +34,7 @@ func main() {
 		tuyaENV.WithDebugMode(true))
 
 	router := gin.Default()
+	router.Use(utils.CORSMiddleware())
 	db := database.Start_db()
 
 	adminRoutes := router.Group("/admin")
