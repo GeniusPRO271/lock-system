@@ -65,14 +65,14 @@ func (c *Controller) PostLogin(ctx *gin.Context) {
 		return
 	}
 
-	token, err := c.UserService.VerifyUser(user)
+	data, err := c.UserService.VerifyUser(user)
 
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": token, "email": user.Email, "message": "Successfully logged in"})
+	ctx.JSON(http.StatusOK, gin.H{"user_data": data.User, "token": data.Token, "message": "Successfully logged in"})
 }
 
 // PutEditUser handles the HTTP PUT request to edit user information.

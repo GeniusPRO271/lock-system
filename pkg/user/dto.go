@@ -6,6 +6,10 @@ type Login struct {
 	Password string `json:"password" binding:"required"` // Password of the user (should be hashed)
 }
 
+type LoginResponse struct {
+	User  UserGetResponse `json:"user" binding:"required"`
+	Token string          `json:"token" binding:"required"`
+}
 type Register struct {
 	Username string `json:"username" binding:"required"`
 	Name     string `json:"name" binding:"required"`

@@ -14,7 +14,7 @@ type UserService interface {
 	CreateUser(user Register) error
 	GetUser(User *model.User, id int) (err error)
 	GetUsers() (*UsersGetResponse, error)
-	VerifyUser(userCredentials Login) (*string, error)
+	VerifyUser(userCredentials Login) (*LoginResponse, error)
 	UpdateUser(User *model.User) (err error)
 }
 
@@ -47,10 +47,10 @@ func (s *UserServiceImpl) CreateUser(user Register) error {
 	return nil
 }
 
-func (s *UserServiceImpl) VerifyUser(userCredentials Login) (*string, error) {
+func (s *UserServiceImpl) VerifyUser(userCredentials Login) (*LoginResponse, error) {
 	var user model.User
 
-	if err := s.Db.First(&user, "email = ?", userCredentials.Email).Error; err != nil {
+	if err := s.Db.Preload("Role").First(&user, "email = ?", userCredentials.Email).Error; err != nil {
 		return nil, err
 	}
 
@@ -60,13 +60,24 @@ func (s *UserServiceImpl) VerifyUser(userCredentials Login) (*string, error) {
 	log.Printf("Passed Password")
 
 	log.Printf("Passed DB")
+
+	user_response := UserGetResponse{
+		Id:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		Name:     user.Name,
+		Role:     user.Role.Name,
+	}
 	token, err := jwt.GenerateJWT(user)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &token, nil
+	return &LoginResponse{
+		User:  user_response,
+		Token: token,
+	}, nil
 }
 
 func (s *UserServiceImpl) GetUser(User *model.User, id int) (err error) {
