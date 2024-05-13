@@ -161,6 +161,7 @@ func (s *SpaceServiceImpl) SpaceToDTO(spaceData model.Space) SpaceDTO {
 		Name:          spaceData.Name,
 		ParentSpaceID: spaceData.ParentSpaceID,
 		SubSpaces:     subSpacesDTO,
+		Devices:       spaceData.Devices,
 	}
 
 	return spaceDTO
