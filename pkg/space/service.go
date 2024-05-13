@@ -113,7 +113,7 @@ func (s *SpaceServiceImpl) GetSpaceByID(spaceID string) (*SpaceDTO, error) {
 
 func (s *SpaceServiceImpl) GetAllSpaces() ([]SpaceDTO, error) {
 	var spaces []*model.Space
-	if err := s.Db.Find(&spaces).Error; err != nil {
+	if err := s.Db.Preload("Devices").Find(&spaces).Error; err != nil {
 		return nil, err
 	}
 
