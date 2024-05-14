@@ -21,6 +21,7 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	err := godotenv.Load()
 	if err != nil {
 		stdlog.Fatal("Error loading .env file")
@@ -89,7 +90,7 @@ func main() {
 	// Start the server
 	stdlog.Printf("Starting server at port 8080")
 
-	err = router.Run(":8080")
+	err = router.Run("0.0.0.0:8080")
 	if err != nil {
 		stdlog.Fatal("Server failed to start: ", err)
 	}
