@@ -1,7 +1,6 @@
 package whitelist
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/GeniusPRO271/lock-system/pkg/database"
@@ -75,6 +74,14 @@ func (s *WhitelistServiceImpl) AddUserToWhitelist(userId, spaceId uint, propagat
 		return err
 	}
 
+	// Check if the user is already in the whitelist
+	for _, u := range space.Whitelist.Users {
+		if u.ID == userId {
+			// User already exists in the whitelist, so just skip adding
+			return nil
+		}
+	}
+
 	// Add the user to the whitelist
 	space.Whitelist.Users = append(space.Whitelist.Users, &user)
 
@@ -137,14 +144,13 @@ func (s *WhitelistServiceImpl) DeleteUserFromWhitelist(userId, spaceId uint, pro
 		}
 	}
 
-	if userToDelete == nil {
-		return errors.New("user not found in the whitelist")
+	if userToDelete != nil {
+		if err := s.Db.Model(&whitelist).Association("Users").Delete(userToDelete); err != nil {
+			return err
+		}
 	}
 
 	// Use GORM's association to delete the user from the whitelist
-	if err := s.Db.Model(&whitelist).Association("Users").Delete(userToDelete); err != nil {
-		return err
-	}
 
 	// If propagate is true, recursively delete the user from the whitelists of subspaces
 	if propagate {
