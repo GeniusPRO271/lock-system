@@ -87,10 +87,11 @@ func main() {
 	}
 	roleHandler.RegisterRoutes(router, adminRoutes)
 
+	port := os.Getenv("PORT")
 	// Start the server
-	stdlog.Printf("Starting server at port 8080")
+	stdlog.Printf("Starting server at port " + port)
 
-	err = router.Run("0.0.0.0:8080")
+	err = router.Run(":" + port)
 	if err != nil {
 		stdlog.Fatal("Server failed to start: ", err)
 	}
