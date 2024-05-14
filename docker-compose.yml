@@ -10,8 +10,8 @@ services:
     volumes:
       - ./pkg:/app/pkg
     environment:
-      - DSN=postgres://default:xbQ6wmHzGY9o@ep-lively-resonance-a27p1yn0.eu-central-1.aws.neon.tech:5432/verceldb?sslmode=require
-      - TUYA_ACCESS_ID=8dn7xqvjmsdaf5xsp3v8
-      - TUYA_ACCESS_KEY=c3951bc0ebc742d9a9bb77eb2fa82373
-      - TUYA_APP_NAME=Test
-      - GIN_MODE=release
+      - DSN=
+      - TUYA_ACCESS_ID=
+      - TUYA_ACCESS_KEY=
+      - TUYA_APP_NAME=
+      - GIN_MODE=
