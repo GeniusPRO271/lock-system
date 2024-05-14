@@ -12,6 +12,7 @@ type SpaceService interface {
 	CreateSpace(space model.Space) error
 	GetSpaceByID(spaceID string) (*SpaceDTO, error)
 	GetAllSpaces() ([]SpaceDTO, error)
+	GetAllSpacesFull() ([]SpaceDTO, error)
 	UpdateSpace(space UpdateSpaceDTO, spaceId string) error
 	DeleteSpace(spaceID string) error
 	LoadSubSpaces(space *model.Space) error
@@ -111,9 +112,9 @@ func (s *SpaceServiceImpl) GetSpaceByID(spaceID string) (*SpaceDTO, error) {
 	return &spaceDTO, nil
 }
 
-func (s *SpaceServiceImpl) GetAllSpaces() ([]SpaceDTO, error) {
+func (s *SpaceServiceImpl) GetAllSpacesFull() ([]SpaceDTO, error) {
 	var spaces []*model.Space
-	if err := s.Db.Preload("Devices").Find(&spaces).Error; err != nil {
+	if err := s.Db.Preload("Devices").Where("parent_space_id IS NULL").Find(&spaces).Error; err != nil {
 		return nil, err
 	}
 
@@ -122,6 +123,21 @@ func (s *SpaceServiceImpl) GetAllSpaces() ([]SpaceDTO, error) {
 		if err := s.LoadSubSpaces(space); err != nil {
 			return nil, err
 		}
+		spaceDTO := s.SpaceToDTO(*space)
+		spaceDTOs = append(spaceDTOs, spaceDTO)
+	}
+
+	return spaceDTOs, nil
+}
+
+func (s *SpaceServiceImpl) GetAllSpaces() ([]SpaceDTO, error) {
+	var spaces []*model.Space
+	if err := s.Db.Find(&spaces).Error; err != nil {
+		return nil, err
+	}
+
+	var spaceDTOs []SpaceDTO
+	for _, space := range spaces {
 		spaceDTO := s.SpaceToDTO(*space)
 		spaceDTOs = append(spaceDTOs, spaceDTO)
 	}
