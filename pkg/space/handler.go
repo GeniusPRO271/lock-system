@@ -14,7 +14,7 @@ type Controller struct {
 func (c *Controller) RegisterRoutes(router *gin.Engine, adminRoute *gin.RouterGroup) {
 	adminRoute.POST("/v1/space", c.PostSpace)
 	adminRoute.GET("/v1/spaces", c.GetAllSpaces)
-	adminRoute.GET("/v1/spaces-full", c.GetAllSpaces)
+	adminRoute.GET("/v1/spaces-full", c.GetAllSpacesFull)
 	adminRoute.GET("/v1/space/:spaceId", c.GetSpaceByID)
 	adminRoute.PUT("/v1/space/:spaceId", c.UpadetSpace)
 	adminRoute.DELETE("/v1/space/:spaceId", c.DeleteSpace)
