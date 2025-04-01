@@ -48,7 +48,7 @@ The project follows a clean architecture pattern with the following components:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/lock-system.git
+git clone https://github.com/GeniusPRO271/lock-system
 cd lock-system
 ```
 
@@ -111,21 +111,10 @@ The application can be configured through environment variables:
 - `TUYA_APP_NAME`: Tuya IoT platform application name
 - `GIN_MODE`: Gin framework mode (debug/release)
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 👤 Author
 
-Your Name - [@yourusername](https://github.com/yourusername)
+Your Name - [@GeniusPRO271](https://github.com/GeniusPRO271)
 
 ## 🙏 Acknowledgments
 
